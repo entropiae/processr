@@ -1,30 +1,36 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
-"""
-test_processr
-----------------------------------
-
-Tests for `processr` module.
-"""
-
-import unittest
-
-from processr import processr
+from processr.processr import process, _field_transform, _dict_transform
 
 
-class TestProcessr(unittest.TestCase):
+def test_field_transform():
+    provided_input = {'the_answer': 42}
+    expected_output = {'the_answer': '43'}
 
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
-
-    def test_000_something(self):
-        pass
+    output = _field_transform(
+        {'the_answer': [lambda value: value + 1, str]},
+        provided_input
+    )
+    assert output == expected_output
 
 
-if __name__ == '__main__':
-    import sys
-    sys.exit(unittest.main())
+def test_field_transform_extra_values():
+    provided_input = {'the_answer': 42, 'not_the_answer': 43}
+    expected_output = {'the_answer': '43', 'not_the_answer': 43}
+
+    output = _field_transform(
+        {'the_answer': [lambda value: value + 1, str]},
+        provided_input
+    )
+    assert output == expected_output
+
+
+def test_dict_transform():
+    provided_input = {'the_answer': 42}
+    expected_output = {'the_answer': 42, 'copy_of_the_answer': 42}
+
+    def add_field(d):
+        d['copy_of_the_answer'] = 42
+        return d
+
+    output = _dict_transform([add_field], provided_input)
+    assert output == expected_output
