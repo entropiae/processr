@@ -15,7 +15,6 @@ processr
 
 Compose your dictionary-processing pipeline
 
-* Free software: ISC license
 * Documentation: https://processr.readthedocs.org.
 
 Features
