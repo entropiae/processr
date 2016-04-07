@@ -39,8 +39,20 @@ def _rename_keys(opts, d):
 
 
 def _project(opts, d):
-    # opts = ('key_1', 'key_2')
-    return dict((k, v) for k, v in d.items() if k in opts)
+    """
+    Returns a dictionary composed by items from `d` whose keys are
+    in `opts` collection.
+    If `opts`contains a key which is not in `d` a `KeyError` is raised.
+
+    >>> _project(('a', ), {'a': 1, 'b': 2})
+    {'a': 1}
+    
+    :param opts: a collection containing the key which will be mantained in
+    the returned dict
+    :param d: the input dictionary
+    :return: a dictionary
+    """
+    return dict((k, d[k]) for k in opts)
 
 
 def _field_transform(stage_opts, d):
