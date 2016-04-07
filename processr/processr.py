@@ -22,12 +22,20 @@ pipeline = [
 ]
 """
 
-dummy_stage = lambda x: x
-
 
 def _rename_keys(opts, d):
-    # opts = {old_key: new_key}
-    return dict((opts[k], v) for k, v in d.items())
+    """
+    Returns a dictionary composed by items from `d`; when a key is found
+    in `opts`, the corresponding value is used as key in the new dictionary.
+
+    >>> _rename_keys(opts={'key': 'new_key'}, d={'key': 42})
+    {'new_key': 42}
+
+    :param opts: a mapping used to translate old_key -> new_key
+    :param d: the input dictionary
+    :return: a dictionary
+    """
+    return dict((opts.get(k, k), v) for k, v in d.items())
 
 
 def _project(opts, d):
