@@ -28,7 +28,7 @@ def _rename_keys(opts, d):
     Returns a dictionary composed by items from `d`; when a key is found
     in `opts`, the corresponding value is used as key in the new dictionary.
 
-    >>> _rename_keys(opts={'key': 'new_key'}, d={'key': 42})
+    >>> _rename_keys({'key': 'new_key'}, {'key': 42})
     {'new_key': 42}
 
     :param opts: a mapping used to translate old_key -> new_key
@@ -46,7 +46,7 @@ def _project(opts, d):
 
     >>> _project(('a', ), {'a': 1, 'b': 2})
     {'a': 1}
-    
+
     :param opts: a collection containing the key which will be mantained in
     the returned dict
     :param d: the input dictionary
