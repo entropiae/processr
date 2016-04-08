@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
+
 import logging
 import functools
 from processr.compat import reduce, abc, NullHandler
