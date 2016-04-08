@@ -5,7 +5,11 @@ try:
 except ImportError:  # PY2
     reduce = reduce
 
-import collections.abc as abc
+try:
+    from collections.abc import Iterable, Callable
+except ImportError:
+    from collections import Iterable, Callable
+
 import logging
 
 # Set default logging handler to avoid "No handler found" warnings.
@@ -128,11 +132,11 @@ def process_value(value, fs):
         )
         return_value = f(value, *args, **kwargs)
         log.debug({'output': return_value})
-    elif isinstance(fs, abc.Iterable):
+    elif isinstance(fs, Iterable):
         # The transformers is actually a list of transformers.
         # Recursively call process_value to apply all of them.
         return_value = reduce(process_value, fs, value)
-    elif isinstance(fs, abc.Callable):
+    elif isinstance(fs, Callable):
         # Transformer is a callable w/o extra arguments.
         # Call it!
         log.debug({'transformer': fs, 'input': value})
