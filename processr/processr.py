@@ -24,45 +24,45 @@ pipeline = [
 """
 
 
-def _rename_keys(opts, d):
+def rename_keys(stage_opts, d):
     """
     Returns a dictionary composed by items from `d`; when a key is found
     in `opts`, the corresponding value is used as key in the new dictionary.
 
-    >>> _rename_keys({'key': 'new_key'}, {'key': 42})
+    >>> rename_keys({'key': 'new_key'}, {'key': 42})
     {'new_key': 42}
 
-    :param opts: a mapping used to translate old_key -> new_key
+    :param stage_opts: a mapping used to translate old_key -> new_key
     :param d: the input dictionary
     :return: a dictionary
     """
-    return dict((opts.get(k, k), v) for k, v in d.items())
+    return dict((stage_opts.get(k, k), v) for k, v in d.items())
 
 
-def _project(opts, d):
+def project_dict(stage_opts, d):
     """
     Returns a dictionary composed by items from `d` whose keys are
     in `opts` collection.
     If `opts`contains a key which is not in `d` a `KeyError` is raised.
 
-    >>> _project(('a', ), {'a': 1, 'b': 2})
+    >>> project_dict(('a', ), {'a': 1, 'b': 2})
     {'a': 1}
 
-    :param opts: a collection containing the key which will be mantained in
+    :param stage_opts: a collection containing the key which will be mantained in
     the returned dict
     :param d: the input dictionary
     :return: a dictionary
     """
-    return dict((k, d[k]) for k in opts)
+    return dict((k, d[k]) for k in stage_opts)
 
 
-def _field_transform(stage_opts, d):
+def process_values(stage_opts, d):
     """
     Return a new dictionary whose values are taken from `d` and processed
     using the list of callable having the same key in `stage_opts`.
     Values with no specified transformers are copied untouched.
 
-    >>> _field_transform({'the_answer': [sum, str]}, {'the_answer': [41, 1]})
+    >>> process_values({'the_answer': [sum, str]}, {'the_answer': [41, 1]})
     {'the_answer': '42'}
 
     :param stage_opts: a dictionary containing key -> list of callables
@@ -70,34 +70,34 @@ def _field_transform(stage_opts, d):
     :return: a dictionary
     """
     return dict(
-        (key, _process_obj(original_value, stage_opts.get(key, [])))
-        for key, original_value in d.items()
+        (key, _process_obj(value, stage_opts.get(key, [])))
+        for key, value in d.items()
     )
 
 
-def _dict_transform(opts, d):
+def process_dict(stage_opts, d):
     """
     Return a new dictionary built applying all callable in `opts` to `d`.
 
     >>> reverse_dict = lambda d: dict((v, k) for k, v in d.items())
-    >>> _dict_transform([reverse_dict], {'the_answer': 42})
+    >>> process_dict([reverse_dict], {'the_answer': 42})
     {42: 'the_answer'}
 
-    :param opts: a list of callable to apply to the input dictionary
+    :param stage_opts: a list of callable to apply to the input dictionary
     :param d: the input dictionary
     :return: a dictionary
     """
-    return _process_obj(d, opts)
+    return _process_obj(d, stage_opts)
 
 
 def _process_obj(value, opts):
     return reduce(lambda x, f: f(x), opts, value)
 
 handlers = {
-    'field_transform': _field_transform,
-    'dict_transform': _dict_transform,
-    'rename_keys': _rename_keys,
-    'project': _project
+    'field_transform': process_values,
+    'dict_transform': process_dict,
+    'rename_keys': rename_keys,
+    'project': project_dict
 }
 
 
