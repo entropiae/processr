@@ -56,7 +56,18 @@ def _project(opts, d):
 
 
 def _field_transform(stage_opts, d):
-    # opts: {'key': [op_1, op_2], 'key_2': [op_1. op_2]}
+    """
+    Return a new dictionary whose values are taken from `d` and processed
+    using the list of callable having the same key in `stage_opts`.
+    Values with no specified transformers are copied untouched.
+
+    >>> _field_transform({'the_answer': [sum, str]}, {'the_answer': [41, 1]})
+    {'the_answer': '42'}
+
+    :param stage_opts: a dictionary containing key -> list of callables
+    :param d: the input dictionary
+    :return: a dictionary
+    """
     return dict(
         (key, _process_obj(original_value, stage_opts.get(key, [])))
         for key, original_value in d.items()

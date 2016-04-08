@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from processr.processr import _rename_keys, _project
+from processr.processr import _rename_keys, _project, _field_transform
 
 import pytest
 
@@ -38,5 +38,24 @@ def test_project_extra_fields():
 
     with pytest.raises(KeyError):
         _project(opts, provided_input)
+
+
+def test_transform_fields():
+    provided_input = {'not_the_answer': [9, 9, 9, 9, 9, 9]}
+    opts = {'not_the_answer': [sum, str]}
+
+    # I always thought something was fundamentally wrong with the universe
+    expected_output = {'not_the_answer': '54'}
+    output = _field_transform(opts, provided_input)
+    assert output == expected_output
+
+
+def test_transform_fields_extra_fields():
+    provided_input = {'not_the_answer': [9, 9, 9, 9, 9, 9], 'the_answer': 42}
+    opts = {'not_the_answer': [sum, str]}
+
+    expected_output = {'not_the_answer': '54', 'the_answer': 42}
+    output = _field_transform(opts, provided_input)
+    assert output == expected_output
 
 
