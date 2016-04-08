@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from processr.processr import _rename_keys, _project, _field_transform
+from processr.processr import _rename_keys, _project, _field_transform, _dict_transform
 
 import pytest
 
@@ -57,3 +57,14 @@ def test_transform_fields_extra_fields():
     expected_output = {'not_the_answer': '54', 'the_answer': 42}
     output = _field_transform(opts, provided_input)
     assert output == expected_output
+
+
+def test_dict_transform():
+    provided_input = {'the_answer': 42, 'not_the_answer': 43}
+    ops = [lambda d: dict((v, k) for k, v in d.items())] # Invert key and value in d
+
+    expected_output = {42: 'the_answer', 43: 'not_the_answer'}
+    output = _dict_transform(ops, provided_input)
+    assert output == expected_output
+
+
