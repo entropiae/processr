@@ -1,48 +1,51 @@
 # -*- coding: utf-8 -*-
 
-try:
-    from functools import reduce
-except ImportError:  # PY2
-    reduce = reduce
-
-try:
-    from collections.abc import Iterable, Callable
-except ImportError:
-    from collections import Iterable, Callable
-
 import logging
+import functools
+from processr.compat import reduce, abc, NullHandler
 
-# Set default logging handler to avoid "No handler found" warnings.
-try:  # Python 2.7+
-    from logging import NullHandler
-except ImportError:
-    class NullHandler(logging.Handler):
-        def emit(self, record):
-            pass
-
+# initialize log & set default logging handler
+# to avoid 'No handler found' warnings.
 log = logging.getLogger(__name__)
 log.addHandler(NullHandler())
 
 
-"""
-4 stage-types:
-    field_transform -> change a value of the dict, leaving the 'shape'
-        unchanged
-    dict_transform -> change multiple field at once, change the shape
-        of the dict
-    rename_keys -> rename the keys
-    project -> keep only a subset of the dict
+def process(d, pipeline):
+    """
+    Process a dictionary according to the given pipeline.
 
-The pipeline will be a list of the following format
-pipeline = [
-    {
-        'stage': 'field_transform/dict_transform/rename_keys/project',
-        'opts': [...]
-    }
-]
-"""
+    :param d: the dictionary to process
+    :param pipeline: the processing pipeline
+    :return: a dictionary
+    """
+    return reduce(process_stage, pipeline, d)
 
 
+_stage_handlers = {}
+
+
+def process_stage(d, stage):
+    stage_name = stage['stage']
+    handler = _stage_handlers[stage_name]
+    return handler(stage['opts'], d)
+
+
+##############################################################
+#                           Stages                           #
+##############################################################
+
+def stage(stage_name):
+    def wrapper(f):
+        _stage_handlers[stage_name] = f
+
+        @functools.wraps(f)
+        def wrapped(*args, **kwargs):
+            return f(*args, **kwargs)
+        return wrapped
+    return wrapper
+
+
+@stage('rename_keys')
 def rename_keys(stage_opts, d):
     """
     Returns a dictionary composed by items from `d`; when a key is found
@@ -58,6 +61,7 @@ def rename_keys(stage_opts, d):
     return dict((stage_opts.get(k, k), v) for k, v in d.items())
 
 
+@stage('project_dict')
 def project_dict(stage_opts, d):
     """
     Returns a dictionary composed by items from `d` whose keys are
@@ -75,13 +79,14 @@ def project_dict(stage_opts, d):
     return dict((k, d[k]) for k in stage_opts)
 
 
-def process_values(stage_opts, d):
+@stage('transform_values')
+def transform_values(stage_opts, d):
     """
     Return a new dictionary whose values are taken from `d` and processed
     using the list of callable having the same key in `stage_opts`.
     Values with no specified transformers are copied untouched.
 
-    >>> process_values({'the_answer': [sum, str]}, {'the_answer': [41, 1]})
+    >>> transform_values({'the_answer': [sum, str]}, {'the_answer': [41, 1]})
     {'the_answer': '42'}
 
     :param stage_opts: a dictionary containing key -> list of callables
@@ -94,12 +99,13 @@ def process_values(stage_opts, d):
     )
 
 
-def process_dict(stage_opts, d):
+@stage('transform_dict')
+def transform_dict(stage_opts, d):
     """
     Return a new dictionary built applying all callable in `opts` to `d`.
 
     >>> reverse_dict = lambda d: dict((v, k) for k, v in d.items())
-    >>> process_dict([reverse_dict], {'the_answer': 42})
+    >>> transform_dict([reverse_dict], {'the_answer': 42})
     {42: 'the_answer'}
 
     :param stage_opts: a list of callable to apply to the input dictionary
@@ -132,11 +138,11 @@ def process_value(value, fs):
         )
         return_value = f(value, *args, **kwargs)
         log.debug({'output': return_value})
-    elif isinstance(fs, Iterable):
+    elif isinstance(fs, abc.Iterable):
         # The transformers is actually a list of transformers.
         # Recursively call process_value to apply all of them.
         return_value = reduce(process_value, fs, value)
-    elif isinstance(fs, Callable):
+    elif isinstance(fs, abc.Callable):
         # Transformer is a callable w/o extra arguments.
         # Call it!
         log.debug({'transformer': fs, 'input': value})
@@ -145,21 +151,3 @@ def process_value(value, fs):
     else:
         raise InvalidTransformerFormat(fs)
     return return_value
-
-
-handlers = {
-    'field_transform': process_values,
-    'dict_transform': process_dict,
-    'rename_keys': rename_keys,
-    'project': project_dict
-}
-
-
-def process_stage(d, stage):
-    stage_name = stage['stage']
-    handler = handlers[stage_name]
-    return handler(stage['opts'], d)
-
-
-def process(d, pipeline):
-    return reduce(process_stage, pipeline, d)

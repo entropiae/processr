@@ -20,6 +20,22 @@ Compose your dictionary-processing pipeline
 Features
 --------
 
+4 stage-types:
+    field_transform -> change a value of the dict, leaving the 'shape'
+        unchanged
+    dict_transform -> change multiple field at once, change the shape
+        of the dict
+    rename_keys -> rename the keys
+    project -> keep only a subset of the dict
+
+The pipeline will be a list of the following format
+pipeline = [
+    {
+        'stage': 'field_transform/dict_transform/rename_keys/project',
+        'opts': [...]
+    }
+]
+
 * TODO
 
 Credits

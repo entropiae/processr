@@ -3,8 +3,8 @@
 from processr.processr import \
     rename_keys, \
     project_dict, \
-    process_values, \
-    process_dict
+    transform_values, \
+    transform_dict
 
 import pytest
 
@@ -50,7 +50,7 @@ def test_transform_fields():
 
     # I always thought something was fundamentally wrong with the universe
     expected_output = {'not_the_answer': '54'}
-    output = process_values(opts, provided_input)
+    output = transform_values(opts, provided_input)
     assert output == expected_output
 
 
@@ -59,7 +59,7 @@ def test_transform_fields_extra_fields():
     opts = {'not_the_answer': [sum, str]}
 
     expected_output = {'not_the_answer': '54', 'the_answer': 42}
-    output = process_values(opts, provided_input)
+    output = transform_values(opts, provided_input)
     assert output == expected_output
 
 
@@ -70,5 +70,5 @@ def test_dict_transform():
     ]
 
     expected_output = {42: 'the_answer', 43: 'not_the_answer'}
-    output = process_dict(ops, provided_input)
+    output = transform_dict(ops, provided_input)
     assert output == expected_output
