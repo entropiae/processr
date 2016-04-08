@@ -76,7 +76,17 @@ def _field_transform(stage_opts, d):
 
 
 def _dict_transform(opts, d):
-    # opts: [op_1, op_2, op_3]
+    """
+    Return a new dictionary built applying all callable in `opts` to `d`.
+
+    >>> reverse_dict = lambda d: dict((v, k) for k, v in d.items())
+    >>> _dict_transform([reverse_dict], {'the_answer': 42})
+    {42: 'the_answer'}
+
+    :param opts: a list of callable to apply to the input dictionary
+    :param d: the input dictionary
+    :return: a dictionary
+    """
     return _process_obj(d, opts)
 
 
