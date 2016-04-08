@@ -57,5 +57,3 @@ def test_transform_fields_extra_fields():
     expected_output = {'not_the_answer': '54', 'the_answer': 42}
     output = _field_transform(opts, provided_input)
     assert output == expected_output
-
-
