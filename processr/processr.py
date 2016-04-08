@@ -5,6 +5,7 @@ try:
 except ImportError:  # PY2
     reduce = reduce
 
+import collections.abc as abc
 import logging
 
 # Set default logging handler to avoid "No handler found" warnings.
@@ -62,8 +63,8 @@ def project_dict(stage_opts, d):
     >>> project_dict(('a', ), {'a': 1, 'b': 2})
     {'a': 1}
 
-    :param stage_opts: a collection containing the key which will be mantained in
-    the returned dict
+    :param stage_opts: a collection containing the key which
+    will be maintained in the returned dict.
     :param d: the input dictionary
     :return: a dictionary
     """
@@ -84,7 +85,7 @@ def process_values(stage_opts, d):
     :return: a dictionary
     """
     return dict(
-        (key, _process_obj(value, stage_opts.get(key, [])))
+        (key, process_value(value, stage_opts.get(key, [])))
         for key, value in d.items()
     )
 
@@ -101,11 +102,46 @@ def process_dict(stage_opts, d):
     :param d: the input dictionary
     :return: a dictionary
     """
-    return _process_obj(d, stage_opts)
+    return process_value(d, stage_opts)
 
 
-def _process_obj(value, opts):
-    return reduce(lambda x, f: f(x), opts, value)
+class InvalidTransformerFormat(Exception):
+    pass
+
+
+def process_value(value, fs):
+    """
+    Process a value.
+
+    :param value: the input value to process
+    :param fs: transformer(s) used to process value.
+        Could be a callable, a (callable, args, kwargs) tuple
+        or a list of both.
+    :return: the processed value
+    """
+    if isinstance(fs, tuple):
+        # The transformer is a function which requires extra arguments,
+        # so is expressed as a (f, args, kwargs) tuple.
+        f, args, kwargs = fs
+        log.debug(
+            {'transformer': f, 'args': args, 'kwargs': kwargs, 'input': value}
+        )
+        return_value = f(value, *args, **kwargs)
+        log.debug({'output': return_value})
+    elif isinstance(fs, abc.Iterable):
+        # The transformers is actually a list of transformers.
+        # Recursively call process_value to apply all of them.
+        return_value = reduce(process_value, fs, value)
+    elif isinstance(fs, abc.Callable):
+        # Transformer is a callable w/o extra arguments.
+        # Call it!
+        log.debug({'transformer': fs, 'input': value})
+        return_value = fs(value)
+        log.debug({'output': return_value})
+    else:
+        raise InvalidTransformerFormat(fs)
+    return return_value
+
 
 handlers = {
     'field_transform': process_values,

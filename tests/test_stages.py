@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from processr.processr import rename_keys, project_dict, process_values, process_dict
+from processr.processr import \
+    rename_keys, \
+    project_dict, \
+    process_values, \
+    process_dict
 
 import pytest
 
@@ -61,10 +65,10 @@ def test_transform_fields_extra_fields():
 
 def test_dict_transform():
     provided_input = {'the_answer': 42, 'not_the_answer': 43}
-    ops = [lambda d: dict((v, k) for k, v in d.items())] # Invert key and value in d
+    ops = [
+        lambda d: dict((v, k) for k, v in d.items())  # Invert key and values
+    ]
 
     expected_output = {42: 'the_answer', 43: 'not_the_answer'}
     output = process_dict(ops, provided_input)
     assert output == expected_output
-
-
