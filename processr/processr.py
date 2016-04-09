@@ -16,49 +16,49 @@ log.addHandler(NullHandler())
 ##############################################################
 
 
-def rename_keys(stage_opts, d):
+def rename_keys(d, stage_opts):
     """
     Returns a dictionary composed by items from `d`; when a key is found
     in `opts`, the corresponding value is used as key in the new dictionary.
 
-    >>> rename_keys({'key': 'new_key'}, {'key': 42})
+    >>> rename_keys({'key': 42}, {'key': 'new_key'})
     {'new_key': 42}
 
-    :param stage_opts: a mapping used to translate old_key -> new_key
     :param d: the input dictionary
+    :param stage_opts: a mapping used to translate old_key -> new_key
     :return: a dictionary
     """
     return dict((stage_opts.get(k, k), v) for k, v in d.items())
 
 
-def project_dict(stage_opts, d):
+def project_dict(d, stage_opts):
     """
     Returns a dictionary composed by items from `d` whose keys are
     in `opts` collection.
     If `opts`contains a key which is not in `d` a `KeyError` is raised.
 
-    >>> project_dict(('a', ), {'a': 1, 'b': 2})
+    >>> project_dict({'a': 1, 'b': 2}, ('a', ))
     {'a': 1}
 
-    :param stage_opts: a collection containing the key which
     will be maintained in the returned dict.
     :param d: the input dictionary
+    :param stage_opts: a collection containing the key which
     :return: a dictionary
     """
     return dict((k, d[k]) for k in stage_opts)
 
 
-def transform_values(stage_opts, d):
+def transform_values(d, stage_opts):
     """
     Return a new dictionary whose values are taken from `d` and processed
     using the list of callable having the same key in `stage_opts`.
     Values with no specified transformers are copied untouched.
 
-    >>> transform_values({'the_answer': [sum, str]}, {'the_answer': [41, 1]})
+    >>> transform_values({'the_answer': [41, 1]}, {'the_answer': [sum, str]})
     {'the_answer': '42'}
 
-    :param stage_opts: a dictionary containing key -> list of callables
     :param d: the input dictionary
+    :param stage_opts: a dictionary containing key -> list of callables
     :return: a dictionary
     """
     return dict(
@@ -67,16 +67,16 @@ def transform_values(stage_opts, d):
     )
 
 
-def transform_dict(stage_opts, d):
+def transform_dict(d, stage_opts):
     """
     Return a new dictionary built applying all callable in `opts` to `d`.
 
     >>> reverse_dict = lambda d: dict((v, k) for k, v in d.items())
-    >>> transform_dict([reverse_dict], {'the_answer': 42})
+    >>> transform_dict({'the_answer': 42}, [reverse_dict])
     {42: 'the_answer'}
 
-    :param stage_opts: a list of callable to apply to the input dictionary
     :param d: the input dictionary
+    :param stage_opts: a list of callable to apply to the input dictionary
     :return: a dictionary
     """
     return process_value(d, stage_opts)
