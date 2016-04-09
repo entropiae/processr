@@ -154,6 +154,6 @@ def process(d, pipeline, stage_definitions=Stages()):
     def process_stage(d, stage):
         stage_name = stage['stage']
         handler = stage_definitions[stage_name]
-        return handler(stage['opts'], d)
+        return handler(d, stage['opts'])
 
     return reduce(process_stage, pipeline, d)
