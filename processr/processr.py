@@ -3,7 +3,6 @@
 from __future__ import absolute_import
 
 import logging
-import functools
 from processr.compat import reduce, abc, NullHandler
 
 # initialize log & set default logging handler
@@ -12,42 +11,11 @@ log = logging.getLogger(__name__)
 log.addHandler(NullHandler())
 
 
-def process(d, pipeline):
-    """
-    Process a dictionary according to the given pipeline.
-
-    :param d: the dictionary to process
-    :param pipeline: the processing pipeline
-    :return: a dictionary
-    """
-    return reduce(process_stage, pipeline, d)
-
-
-_stage_handlers = {}
-
-
-def process_stage(d, stage):
-    stage_name = stage['stage']
-    handler = _stage_handlers[stage_name]
-    return handler(stage['opts'], d)
-
-
 ##############################################################
 #                           Stages                           #
 ##############################################################
 
-def stage(stage_name):
-    def wrapper(f):
-        _stage_handlers[stage_name] = f
 
-        @functools.wraps(f)
-        def wrapped(*args, **kwargs):
-            return f(*args, **kwargs)
-        return wrapped
-    return wrapper
-
-
-@stage('rename_keys')
 def rename_keys(stage_opts, d):
     """
     Returns a dictionary composed by items from `d`; when a key is found
@@ -63,7 +31,6 @@ def rename_keys(stage_opts, d):
     return dict((stage_opts.get(k, k), v) for k, v in d.items())
 
 
-@stage('project_dict')
 def project_dict(stage_opts, d):
     """
     Returns a dictionary composed by items from `d` whose keys are
@@ -81,7 +48,6 @@ def project_dict(stage_opts, d):
     return dict((k, d[k]) for k in stage_opts)
 
 
-@stage('transform_values')
 def transform_values(stage_opts, d):
     """
     Return a new dictionary whose values are taken from `d` and processed
@@ -101,7 +67,6 @@ def transform_values(stage_opts, d):
     )
 
 
-@stage('transform_dict')
 def transform_dict(stage_opts, d):
     """
     Return a new dictionary built applying all callable in `opts` to `d`.
@@ -116,6 +81,28 @@ def transform_dict(stage_opts, d):
     """
     return process_value(d, stage_opts)
 
+
+# TODO: aim for a better name
+class Stages(dict):
+
+    _default_stages = {
+        'project_dict': project_dict,
+        'rename_keys': rename_keys,
+        'transform_values': transform_values,
+        'transform_dict': transform_dict
+    }
+
+    def __init__(self, add_default_stages=True, **kwargs):
+        super(Stages, self).__init__(**kwargs)
+
+        if add_default_stages:
+            for stage_name, stage_handler in self._default_stages.items():
+                self[stage_name] = [stage_handler]
+
+
+##############################################################
+#                     Process all the things!                #
+##############################################################
 
 class InvalidTransformerFormat(Exception):
     pass
@@ -153,3 +140,20 @@ def process_value(value, fs):
     else:
         raise InvalidTransformerFormat(fs)
     return return_value
+
+
+def process(d, pipeline, stage_definitions=Stages()):
+    """
+    Process a dictionary according to the given pipeline.
+
+    :param d: the dictionary to process
+    :param pipeline: the processing pipeline
+    :param stage_definitions:
+    :return: a dictionary
+    """
+    def process_stage(d, stage):
+        stage_name = stage['stage']
+        handler = stage_definitions[stage_name]
+        return handler(stage['opts'], d)
+
+    return reduce(process_stage, pipeline, d)
