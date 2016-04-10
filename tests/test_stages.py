@@ -4,8 +4,8 @@ from processr.processr import (
     rename_keys,
     project_dict,
     transform_values,
-    transform_dict
-)
+    transform_dict,
+    transform_values_strict)
 
 import pytest
 
@@ -75,6 +75,40 @@ def test_transform_values_extra_fields():
     output = transform_values(d, opts)
     assert output == expected_output
 
+
+def test_transform_values_non_strictness():
+    d = {'not_the_answer': [9, 9, 9, 9, 9, 9]}
+    opts = {'the_answer': [str]}
+
+    expected_output = {'not_the_answer': [9, 9, 9, 9, 9, 9]}
+    output = transform_values(d, opts)
+    assert output == expected_output
+
+
+def test_transform_values_strict():
+    d = {'not_the_answer': [9, 9, 9, 9, 9, 9]}
+    opts = {'not_the_answer': [sum, str]}
+
+    expected_output = {'not_the_answer': '54'}
+    output = transform_values_strict(d, opts)
+    assert output == expected_output
+
+
+def test_transform_values_extra_fields():
+    d = {'not_the_answer': [9, 9, 9, 9, 9, 9], 'the_answer': 42}
+    opts = {'not_the_answer': [sum, str]}
+
+    expected_output = {'not_the_answer': '54', 'the_answer': 42}
+    output = transform_values_strict(d, opts)
+    assert output == expected_output
+
+
+def test_transform_values_strict_ko():
+    d = {'not_the_answer': [9, 9, 9, 9, 9, 9]}
+    opts = {'the_answer': [str]}
+
+    with pytest.raises(KeyError):
+        transform_values_strict(d, opts)
 
 ##############################################################
 #                       transform_dict                       #

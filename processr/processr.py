@@ -3,6 +3,8 @@
 from __future__ import absolute_import
 
 import logging
+from itertools import chain
+
 from processr.compat import reduce, abc, NullHandler
 
 # initialize log & set default logging handler
@@ -67,6 +69,31 @@ def transform_values(d, stage_opts):
     )
 
 
+def transform_values_strict(d, stage_opts):
+    """
+    Like `transform_values`, but raise a `KeyError` if a key from stage_opts
+    isn't found in d.
+    :param d: the input dictionary
+    :param stage_opts: a dictionary containing key -> list of callables
+    :return: a dictionary
+    """
+
+    unchanged_items = (
+        (key, value)
+        for key, value in d.items()
+        if key not in stage_opts
+    )
+
+    processed_items = (
+        (key, process_value(d[key], opts))
+        for key, opts in stage_opts.items()
+    )
+
+    return dict(
+        chain(unchanged_items, processed_items)
+    )
+
+
 def transform_dict(d, stage_opts):
     """
     Return a new dictionary built applying all callable in `opts` to `d`.
@@ -82,18 +109,25 @@ def transform_dict(d, stage_opts):
     return process_value(d, stage_opts)
 
 
-# TODO: aim for a better name
-class Stages(dict):
+class StageDefinitions(dict):
+    """
+    Provides a way to get a stage handler by its name, and a way
+    to trivially add custom stages.
+
+    :param add_default_stages: add the 4 default stage handlers
+    """
 
     _default_stages = {
         'project_dict': project_dict,
         'rename_keys': rename_keys,
         'transform_values': transform_values,
-        'transform_dict': transform_dict
+        'transform_dict': transform_dict,
+        'transform_values_strict': transform_values_strict
     }
 
-    def __init__(self, add_default_stages=True, **kwargs):
-        super(Stages, self).__init__(**kwargs)
+    def __init__(self, add_default_stages=True):
+
+        super(StageDefinitions, self).__init__()
 
         if add_default_stages:
             for stage_name, stage_handler in self._default_stages.items():
@@ -142,18 +176,22 @@ def process_value(value, fs):
     return return_value
 
 
-def process(d, pipeline, stage_definitions=Stages()):
+def process(d, pipeline, stage_definitions=StageDefinitions()):
     """
-    Process a dictionary according to the given pipeline.
+    Process a dictionary according to the given pipeline, using
+    the stage handlers defined in stage_definitions.
 
     :param d: the dictionary to process
     :param pipeline: the processing pipeline
-    :param stage_definitions:
+    :param stage_definitions: a (stage_name, stage_handler) mapping
     :return: a dictionary
     """
     def process_stage(d, stage):
-        stage_name = stage['stage']
-        handler = stage_definitions[stage_name]
-        return handler(d, stage['opts'])
+        stage_name, stage_option = stage
+        try:
+            handler = stage_definitions[stage_name]
+        except KeyError:
+            raise
+        return handler(d, stage_option)
 
     return reduce(process_stage, pipeline, d)
