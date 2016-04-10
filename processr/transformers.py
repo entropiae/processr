@@ -1,8 +1,14 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
+
 from processr.compat import reduce
 from functools import partial
 
+
+##############################################################
+#                 Field transformers & utils                 #
+##############################################################
 
 def apply_default(value, default):
     return value if value is not None else default
@@ -13,9 +19,9 @@ def apply_map(fun):
     Restituisce una funzione che trasforma gli elementi di una sequenza in modo
     lazy usando la fun fornita
     """
-    def wrapped_map(sequence):
+    def _map(sequence):
         return (fun(item) for item in sequence)
-    return wrapped_map
+    return _map
 
 
 def apply_filter(fun):
@@ -23,10 +29,14 @@ def apply_filter(fun):
     Restituisce una funzione che filtra in modo lazy gli elementi di una
     sequenza
     """
-    def wrapped_filter(sequence):
+    def _filter(sequence):
         return (item for item in sequence if fun(item))
-    return wrapped_filter
+    return _filter
 
+
+##############################################################
+#                     Dict transformers                      #
+##############################################################
 
 def flatten(row, source_key, destination_keys):
     """
