@@ -1,111 +1,197 @@
 # -*- coding: utf-8 -*-
 
-try:
-    from functools import reduce
-except ImportError:  # PY2
-    reduce = reduce
+from __future__ import absolute_import
 
-"""
-4 stage-types:
-    field_transform -> change a value of the dict, leaving the 'shape'
-        unchanged
-    dict_transform -> change multiple field at once, change the shape
-        of the dict
-    rename_keys -> rename the keys
-    project -> keep only a subset of the dict
+import logging
+from itertools import chain
 
-The pipeline will be a list of the following format
-pipeline = [
-    {
-        'stage': 'field_transform/dict_transform/rename_keys/project',
-        'opts': [...]
-    }
-]
-"""
+from processr.compat import reduce, abc, NullHandler
+
+# initialize log & set default logging handler
+# to avoid 'No handler found' warnings.
+log = logging.getLogger(__name__)
+log.addHandler(NullHandler())
 
 
-def rename_keys(stage_opts, d):
+##############################################################
+#                           Stages                           #
+##############################################################
+
+
+def rename_keys(d, stage_opts):
     """
     Returns a dictionary composed by items from `d`; when a key is found
     in `opts`, the corresponding value is used as key in the new dictionary.
 
-    >>> rename_keys({'key': 'new_key'}, {'key': 42})
+    >>> rename_keys({'key': 42}, {'key': 'new_key'})
     {'new_key': 42}
 
-    :param stage_opts: a mapping used to translate old_key -> new_key
     :param d: the input dictionary
+    :param stage_opts: a mapping used to translate old_key -> new_key
     :return: a dictionary
     """
     return dict((stage_opts.get(k, k), v) for k, v in d.items())
 
 
-def project_dict(stage_opts, d):
+def project_dict(d, stage_opts):
     """
     Returns a dictionary composed by items from `d` whose keys are
     in `opts` collection.
     If `opts`contains a key which is not in `d` a `KeyError` is raised.
 
-    >>> project_dict(('a', ), {'a': 1, 'b': 2})
+    >>> project_dict({'a': 1, 'b': 2}, ('a', ))
     {'a': 1}
 
-    :param stage_opts: a collection containing the key which will be mantained in
-    the returned dict
+    will be maintained in the returned dict.
     :param d: the input dictionary
+    :param stage_opts: a collection containing the key which
     :return: a dictionary
     """
     return dict((k, d[k]) for k in stage_opts)
 
 
-def process_values(stage_opts, d):
+def transform_values(d, stage_opts):
     """
     Return a new dictionary whose values are taken from `d` and processed
     using the list of callable having the same key in `stage_opts`.
     Values with no specified transformers are copied untouched.
 
-    >>> process_values({'the_answer': [sum, str]}, {'the_answer': [41, 1]})
+    >>> transform_values({'the_answer': [41, 1]}, {'the_answer': [sum, str]})
     {'the_answer': '42'}
 
-    :param stage_opts: a dictionary containing key -> list of callables
     :param d: the input dictionary
+    :param stage_opts: a dictionary containing key -> list of callables
     :return: a dictionary
     """
     return dict(
-        (key, _process_obj(value, stage_opts.get(key, [])))
+        (key, process_value(value, stage_opts.get(key, [])))
         for key, value in d.items()
     )
 
 
-def process_dict(stage_opts, d):
+def transform_values_strict(d, stage_opts):
+    """
+    Like `transform_values`, but raise a `KeyError` if a key from stage_opts
+    isn't found in d.
+    :param d: the input dictionary
+    :param stage_opts: a dictionary containing key -> list of callables
+    :return: a dictionary
+    """
+
+    unchanged_items = (
+        (key, value)
+        for key, value in d.items()
+        if key not in stage_opts
+    )
+
+    processed_items = (
+        (key, process_value(d[key], opts))
+        for key, opts in stage_opts.items()
+    )
+
+    return dict(
+        chain(unchanged_items, processed_items)
+    )
+
+
+def transform_dict(d, stage_opts):
     """
     Return a new dictionary built applying all callable in `opts` to `d`.
 
     >>> reverse_dict = lambda d: dict((v, k) for k, v in d.items())
-    >>> process_dict([reverse_dict], {'the_answer': 42})
+    >>> transform_dict({'the_answer': 42}, [reverse_dict])
     {42: 'the_answer'}
 
-    :param stage_opts: a list of callable to apply to the input dictionary
     :param d: the input dictionary
+    :param stage_opts: a list of callable to apply to the input dictionary
     :return: a dictionary
     """
-    return _process_obj(d, stage_opts)
+    return process_value(d, stage_opts)
 
 
-def _process_obj(value, opts):
-    return reduce(lambda x, f: f(x), opts, value)
+class StageDefinitions(dict):
+    """
+    Provides a way to get a stage handler by its name, and a way
+    to trivially add custom stages.
 
-handlers = {
-    'field_transform': process_values,
-    'dict_transform': process_dict,
-    'rename_keys': rename_keys,
-    'project': project_dict
-}
+    :param add_default_stages: add the 4 default stage handlers
+    """
+
+    _default_stages = {
+        'project_dict': project_dict,
+        'rename_keys': rename_keys,
+        'transform_values': transform_values,
+        'transform_dict': transform_dict,
+        'transform_values_strict': transform_values_strict
+    }
+
+    def __init__(self, add_default_stages=True):
+
+        super(StageDefinitions, self).__init__()
+
+        if add_default_stages:
+            for stage_name, stage_handler in self._default_stages.items():
+                self[stage_name] = [stage_handler]
 
 
-def process_stage(d, stage):
-    stage_name = stage['stage']
-    handler = handlers[stage_name]
-    return handler(stage['opts'], d)
+##############################################################
+#                     Process all the things!                #
+##############################################################
+
+class InvalidTransformerFormat(Exception):
+    pass
 
 
-def process(d, pipeline):
+def process_value(value, fs):
+    """
+    Process a value.
+
+    :param value: the input value to process
+    :param fs: transformer(s) used to process value.
+        Could be a callable, a (callable, args, kwargs) tuple
+        or a list of both.
+    :return: the processed value
+    """
+    if isinstance(fs, tuple):
+        # The transformer is a function which requires extra arguments,
+        # so is expressed as a (f, args, kwargs) tuple.
+        f, args, kwargs = fs
+        log.debug(
+            {'transformer': f, 'args': args, 'kwargs': kwargs, 'input': value}
+        )
+        return_value = f(value, *args, **kwargs)
+        log.debug({'output': return_value})
+    elif isinstance(fs, abc.Iterable):
+        # The transformers is actually a list of transformers.
+        # Recursively call process_value to apply all of them.
+        return_value = reduce(process_value, fs, value)
+    elif isinstance(fs, abc.Callable):
+        # Transformer is a callable w/o extra arguments.
+        # Call it!
+        log.debug({'transformer': fs, 'input': value})
+        return_value = fs(value)
+        log.debug({'output': return_value})
+    else:
+        raise InvalidTransformerFormat(fs)
+    return return_value
+
+
+def process(d, pipeline, stage_definitions=StageDefinitions()):
+    """
+    Process a dictionary according to the given pipeline, using
+    the stage handlers defined in stage_definitions.
+
+    :param d: the dictionary to process
+    :param pipeline: the processing pipeline
+    :param stage_definitions: a (stage_name, stage_handler) mapping
+    :return: a dictionary
+    """
+    def process_stage(d, stage):
+        stage_name, stage_option = stage
+        try:
+            handler = stage_definitions[stage_name]
+        except KeyError:
+            raise
+        return handler(d, stage_option)
+
     return reduce(process_stage, pipeline, d)
