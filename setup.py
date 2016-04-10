@@ -14,18 +14,6 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-requirements = [
-    # TODO: put package requirements here
-]
-
-test_requirements = [
-    'pytest'
-]
-
-setup_requirements = [
-    'pytest-runner'
-]
-
 setup(
     name='processr',
     version='0.1.0',
@@ -40,17 +28,16 @@ setup(
     package_dir={'processr':
                  'processr'},
     include_package_data=True,
-    install_requires=requirements,
-    license="ISCL",
+    install_requires=[],
+    license="MIT",
     zip_safe=False,
     keywords='processr',
     classifiers=[
-        'Development Status :: 2 - Pre-Alpha',
+        'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
-        'License :: OSI Approved :: ISC License (ISCL)',
+        'License :: OSI Approved :: MIT License',
         'Natural Language :: English',
         "Programming Language :: Python :: 2",
-        'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.3',
@@ -58,6 +45,6 @@ setup(
         'Programming Language :: Python :: 3.5',
     ],
     test_suite='tests',
-    tests_require=test_requirements,
-    setup_requires=setup_requirements
+    tests_require=['pytest'],
+    setup_requires=['pytest-runner']
 )

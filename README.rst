@@ -1,14 +1,10 @@
-===============================
-processr
-===============================
+******************************
+processr - process your dicts!
+******************************
+
 
 .. image:: https://img.shields.io/travis/entropiae/processr.svg
-        :target: https://travis-ci.org/entropiae/processr
+    :target: https://travis-ci.org/entropiae/processr
+    :alt: Travis-CI
 
-Process your dictionaries.
-
-Features
---------
-
-WIP. If you're interested, ask me anything on twitter_
-.. _twitter: https://twitter.com/entropiae
+WIP. If you're interested, reach me on `twitter <https://twitter.com/entropiae>`_.
