@@ -3,7 +3,8 @@
 from __future__ import absolute_import
 
 from processr.compat import reduce
-from functools import partial
+
+from processr.compat import abc
 
 
 ##############################################################
@@ -37,6 +38,52 @@ def apply_filter(fun):
 ##############################################################
 #                     Dict transformers                      #
 ##############################################################
+
+def set_value(d, key, value, func=lambda _: True):
+    """
+    Add (or replace) a field to a dict only if the result of `func` is True
+    for the computed value.
+    Value could be a plain value or a callable. In the latter case,
+    it will be called (with row as an argument) to build the real value.
+
+    Add it to your pipeline like:
+    (
+        set_value
+        {
+            'key': 'the_answer',
+            'value': 42,  # or something like lambda d: 42
+            'func': lambda x: True  # optional
+        }
+    )
+
+    :param d: the input dictionary
+    :param key: the key of the value to set
+    :param value: the value to set; could be a callable
+    :param func: an optional boolean function that will be called
+    on the value to check if should be added to the dictionary
+    :return: a dictionary
+    """
+
+    if isinstance(value, abc.Callable):
+        # Q: Why are you using LBYL instead of EAFP?
+        # A: Catching the TypeError raised by value() when its not
+        # a callable will swallow potential exceptions raised
+        # by the code inside it when it is a callable.
+        value = value(d)
+
+    if func(value):
+        d[key] = value
+
+    return d
+
+
+def get_value(row, source_key, default=None):
+    try:
+        value = reduce(lambda value, key: value[key], source_key.split('.'), row)
+    except KeyError:
+        value = default
+    return value
+
 
 def flatten(row, source_key, destination_keys):
     """
@@ -78,42 +125,13 @@ def copy_value(row, source_key, destination_key, default=None):
     return set_value(row, destination_key, get_value(row, source_key, default))
 
 
-def set_value_if(row, key, value, func):
-    """
-    Add (or replace) a field to a row only if the result of `func` is True for
-    the computed value.
-    Value could be a plain value or a callable. In the latter case,
-    it will be called (with row as an argument) to build the final value.
-    """
-    try:
-        # Value could be a callable
-        value = value(row)
-    except TypeError:
-        pass
-
-    if func(value):
-        row[key] = value
-
-    return row
 
 
-"""
-Same as set_value_if, but without the `if`. It adds the value, no matter what
-its value is.
-"""
-set_value = partial(set_value_if, func=lambda value: True)
 
 
-def get_value(row, source_key, default=None):
-    """
-    Estrae un valore dal documento. Supporta documenti innestati (usare il .
-    per separare le chiavi).
-    """
-    try:
-        value = reduce(lambda value, key: value[key], source_key.split('.'), row)
-    except KeyError:
-        value = default
-    return value
+
+
+
 
 
 def passthrough_on_exception(*exceptions):
