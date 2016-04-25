@@ -114,7 +114,7 @@ class StageDefinitions(dict):
     Provides a way to get a stage handler by its name, and a way
     to trivially add custom stages.
 
-    :param add_default_stages: add the 4 default stage handlers
+    :param add_default_stages: add the 5 default stage handlers
     """
 
     _default_stages = {
