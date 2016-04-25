@@ -5,6 +5,14 @@ import pytest
 from processr.transformers import set_value, get_value, copy_value, copy_value_strict
 
 
+class DummyException(Exception):
+    pass
+
+
+def raise_dummy(*args, **kwargs):
+    raise DummyException
+
+
 def test_set_value():
     provided_input = {}
     expected_output = {'the_answer': 42}
@@ -58,14 +66,11 @@ def test_set_value_if_not():
 def test_set_value_if_exception_bubbling():
     provided_input = {}
 
-    def raise_exc(_):
-        raise TypeError
-
-    with pytest.raises(TypeError):
+    with pytest.raises(DummyException):
         set_value(
             provided_input,
             'the_answer',
-            raise_exc
+            raise_dummy
         )
 
 
