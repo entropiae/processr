@@ -111,43 +111,6 @@ def copy_value_strict(d, source_key, destination_key):
     return set_value(d, destination_key, get_value(d, source_key))
 
 
-def flatten(row, source_key, destination_keys):
-    """
-    Convert a list of dicts (identified by the source_key key in the input row) in a dict containing
-    (destination_key, list) items.
-
-    # Example
-    row = {
-        'doc_key': [
-            {
-                'sub_key_1': 1,
-                'sub_key_2': 2
-            },
-            {
-                'sub_key_1': 3
-                'sub_key_2': 4
-            }
-        ]
-    }
-
-    row = flatten(row, 'doc_key', ['sub_key_1', 'sub_key_2'])
-
-    output = {
-        'sub_key_1': [1, 3],
-        'sub_key_2': [2, 4],
-    }
-    """
-    subdocuments = row.pop(source_key, [])
-
-    def zip_subdocuments(key):
-        zipped_value = (subdocument.get(key, None) for subdocument in subdocuments)
-        return [value for value in zipped_value if value is not None]
-
-    flatten_fields = [(key, zip_subdocuments(key)) for key in destination_keys]
-    return dict(row.items() + flatten_fields)
-
-
-
 def passthrough_on_exception(*exceptions):
     """
     Wrap a row transformer, catching exceptions throwed by it.
