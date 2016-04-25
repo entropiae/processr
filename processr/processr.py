@@ -154,7 +154,7 @@ def process_value(value, fs):
     """
     if isinstance(fs, tuple):
         # The transformer is a function which requires extra arguments,
-        # so is expressed as a (f, args, kwargs) tuple.
+        # so is expressed as a (f, kwargs) tuple.
         f, kwargs = fs
         log.debug(
             {'transformer': f, 'kwargs': kwargs, 'input': value}
