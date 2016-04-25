@@ -48,7 +48,7 @@ def set_value(d, key, value, func=lambda _: True):
 
     Add it to your pipeline like:
     (
-        set_value
+        set_value,
         {
             'key': 'the_answer',
             'value': 42,  # or something like lambda d: 42
@@ -77,12 +77,38 @@ def set_value(d, key, value, func=lambda _: True):
     return d
 
 
-def get_value(row, source_key, default=None):
+def get_value(d, keys):
+    """
+    Retrieve a value from a dict. Raise KeyError if the key isn't found.
+    `keys` is an iterable of key, to support nested dicts.
+    """
+    return reduce(lambda sub_d, key: sub_d[key], keys, d)
+
+
+def copy_value(d, source_key, destination_key, default=None):
+    """
+    Copy a value from an item of a dict to another item. Source
+    item could be a nested dict. If the source value isn't found
+    `default` is used.
+    :param d: the input dictionary
+    :param source_key: an iterable of keys
+    :param destination_key: the key of the new item
+    :param default: the value to set if `source_keys` isn't in the dictionary
+    :return: a dictionary
+    """
     try:
-        value = reduce(lambda value, key: value[key], source_key.split('.'), row)
+        value = get_value(d, source_key)
     except KeyError:
         value = default
-    return value
+
+    return set_value(d, destination_key, value)
+
+
+def copy_value_strict(d, source_key, destination_key):
+    """
+    Like copy_value, but raise a KeyError if the value isn't found.
+    """
+    return set_value(d, destination_key, get_value(d, source_key))
 
 
 def flatten(row, source_key, destination_keys):
@@ -119,18 +145,6 @@ def flatten(row, source_key, destination_keys):
 
     flatten_fields = [(key, zip_subdocuments(key)) for key in destination_keys]
     return dict(row.items() + flatten_fields)
-
-
-def copy_value(row, source_key, destination_key, default=None):
-    return set_value(row, destination_key, get_value(row, source_key, default))
-
-
-
-
-
-
-
-
 
 
 
