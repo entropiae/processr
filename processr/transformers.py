@@ -2,6 +2,8 @@
 
 from __future__ import absolute_import
 
+import functools
+
 from processr.compat import reduce
 
 from processr.compat import abc
@@ -113,14 +115,16 @@ def copy_value_strict(d, source_key, destination_key):
 
 def passthrough_on_exception(*exceptions):
     """
-    Wrap a row transformer, catching exceptions throwed by it.
-    If the exception is among the ones specified, it return the input row value.
+    Wrap a dict transformer, catching threw exception.
+    If threw_exception in exceptions, return the input dict. Else,
+    reraise the exception.
     """
     def wrapper(f):
-        def wrapped(arg):
+        @functools.wraps(f)
+        def wrapped(d):
             try:
-                return f(arg)
+                return f(d)
             except exceptions:
-                return arg
+                return d
         return wrapped
     return wrapper

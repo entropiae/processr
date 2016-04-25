@@ -2,7 +2,7 @@
 
 import pytest
 
-from processr.transformers import set_value, get_value, copy_value, copy_value_strict
+from processr.transformers import set_value, get_value, copy_value, copy_value_strict, passthrough_on_exception
 
 
 class DummyException(Exception):
@@ -134,3 +134,17 @@ def test_copy_value_strict():
             ['wrong_answer'],
             'not_the_answer',
         )
+
+
+@passthrough_on_exception(DummyException)
+def wrapped_raiser(*args, **kwargs):
+    raise DummyException
+
+
+def test_passthrough():
+    input = {'the_answer': 42}
+
+    output = wrapped_raiser(input)
+    assert input == output
+
+
