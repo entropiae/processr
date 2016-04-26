@@ -94,15 +94,6 @@ def test_transform_values_strict():
     assert output == expected_output
 
 
-def test_transform_values_extra_fields():
-    d = {'not_the_answer': [9, 9, 9, 9, 9, 9], 'the_answer': 42}
-    opts = {'not_the_answer': [sum, str]}
-
-    expected_output = {'not_the_answer': '54', 'the_answer': 42}
-    output = transform_values_strict(d, opts)
-    assert output == expected_output
-
-
 def test_transform_values_strict_ko():
     d = {'not_the_answer': [9, 9, 9, 9, 9, 9]}
     opts = {'the_answer': [str]}
@@ -113,6 +104,7 @@ def test_transform_values_strict_ko():
 ##############################################################
 #                       transform_dict                       #
 ##############################################################
+
 
 def test_dict_transform():
     d = {'the_answer': 42, 'not_the_answer': 43}

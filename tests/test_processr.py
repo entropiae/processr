@@ -27,7 +27,7 @@ def test_process_value_fun_with_args():
     def sum(a, b):
         return a + b
 
-    opts = [(sum, [], {'b': 1}), str]
+    opts = [(sum, {'b': 1}), str]
     expected_output = '42'
 
     output = process_value(input_value, opts)

@@ -114,7 +114,7 @@ class StageDefinitions(dict):
     Provides a way to get a stage handler by its name, and a way
     to trivially add custom stages.
 
-    :param add_default_stages: add the 4 default stage handlers
+    :param add_default_stages: add the 5 default stage handlers
     """
 
     _default_stages = {
@@ -154,12 +154,12 @@ def process_value(value, fs):
     """
     if isinstance(fs, tuple):
         # The transformer is a function which requires extra arguments,
-        # so is expressed as a (f, args, kwargs) tuple.
-        f, args, kwargs = fs
+        # so is expressed as a (f, kwargs) tuple.
+        f, kwargs = fs
         log.debug(
-            {'transformer': f, 'args': args, 'kwargs': kwargs, 'input': value}
+            {'transformer': f, 'kwargs': kwargs, 'input': value}
         )
-        return_value = f(value, *args, **kwargs)
+        return_value = f(value, **kwargs)
         log.debug({'output': return_value})
     elif isinstance(fs, abc.Iterable):
         # The transformers is actually a list of transformers.
