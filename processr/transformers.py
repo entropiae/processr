@@ -16,6 +16,10 @@ from processr.compat import abc
 def apply_default(default, null_values=(None, '')):
     """
     Return a functions which apply a default if value is "nullable".
+
+    >>> default = apply_default(42)
+    >>> default(None)
+    42
     """
     def _apply_default(value):
         return value if value not in null_values else default
@@ -24,21 +28,29 @@ def apply_default(default, null_values=(None, '')):
 
 def apply_map(fun):
     """
-    Restituisce una funzione che trasforma gli elementi di una sequenza in modo
-    lazy usando la fun fornita
+    Return a function which lazily apply the provided
+    function on an interable.
+
+    >>> mapper = apply_map(lambda x: x + 1)
+    >>> list(mapper([1, 2, 3]))
+    [2, 3, 4]
     """
-    def _map(sequence):
-        return (fun(item) for item in sequence)
+    def _map(iterable):
+        return (fun(elem) for elem in iterable)
     return _map
 
 
 def apply_filter(fun):
     """
-    Restituisce una funzione che filtra in modo lazy gli elementi di una
-    sequenza
+    Return a function which lazily filter the iterable using the
+    given function.
+
+    >>> flt = apply_filter(lambda x: x % 2 == 0)
+    >>> list(flt([1, 2, 3]))
+    [2]
     """
-    def _filter(sequence):
-        return (item for item in sequence if fun(item))
+    def _filter(iterable):
+        return (element for element in iterable if fun(element))
     return _filter
 
 
