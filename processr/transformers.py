@@ -45,8 +45,8 @@ def apply_filter(fun):
     Return a function which lazily filter the iterable using the
     given function.
 
-    >>> flt = apply_filter(lambda x: x % 2 == 0)
-    >>> list(flt([1, 2, 3]))
+    >>> filtrator = apply_filter(lambda x: x % 2 == 0)
+    >>> list(filtrator([1, 2, 3]))
     [2]
     """
     def _filter(iterable):

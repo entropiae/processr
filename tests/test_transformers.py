@@ -4,7 +4,7 @@ import pytest
 
 from processr.transformers import (apply_default, set_value, get_value,
                                    copy_value, copy_value_strict,
-                                   passthrough_on_exception)
+                                   passthrough_on_exception, apply_map, apply_filter)
 
 
 class DummyException(Exception):
@@ -43,6 +43,25 @@ def test_apply_default():
 
     output = default(provided_input)
     assert output == expected_output
+
+
+def test_apply_map():
+    provided_input = [1, 2, 3, 4, 5]
+    expected_output = [1, 4, 9, 16, 25]
+
+    mapper = apply_map(lambda x: x ** 2)
+    output = mapper(provided_input)
+
+    assert list(output) == expected_output
+
+
+def test_apply_filter():
+    provided_input = [1, 2, 3, 4, 5]
+    expected_output = [1, 3, 5]
+
+    filtrator = apply_filter(lambda x: x % 2 != 0)
+    output = filtrator(provided_input)
+    assert list(output) == expected_output
 
 
 def test_set_value():
