@@ -2,7 +2,8 @@
 
 import pytest
 
-from processr.transformers import set_value, get_value, copy_value, copy_value_strict, passthrough_on_exception
+from processr.transformers import (set_value, get_value, copy_value,
+                                   copy_value_strict, passthrough_on_exception)
 
 
 class DummyException(Exception):
@@ -146,5 +147,3 @@ def test_passthrough():
 
     output = wrapped_raiser(input)
     assert input == output
-
-
