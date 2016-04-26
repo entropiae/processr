@@ -16,26 +16,32 @@ def raise_dummy(*args, **kwargs):
 
 
 def test_apply_default_passthrough():
-    input = 42
+    provided_input = 42
     expected_output = 42
 
-    output = apply_default(input, default=43)
+    default = apply_default(43)
+
+    output = default(provided_input)
     assert output == expected_output
 
 
 def test_apply_default_custom_null():
-    input=[]
+    provided_input=[]
     expected_output = 42
 
-    output = apply_default(input, default=42, null_values=([], '', None))
+    default = apply_default(default=42, null_values=([], '', None))
+
+    output = default(provided_input)
     assert output == expected_output
 
 
 def test_apply_default():
-    input = None
+    provided_input = None
     expected_output = 42
 
-    output = apply_default(input, default=42)
+    default = apply_default(default=42)
+
+    output = default(provided_input)
     assert output == expected_output
 
 
