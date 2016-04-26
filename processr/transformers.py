@@ -13,8 +13,11 @@ from processr.compat import abc
 #                 Field transformers & utils                 #
 ##############################################################
 
-def apply_default(value, default):
-    return value if value is not None else default
+def apply_default(value, default, null_values=(None, '')):
+    """
+    Apply default if value is "nullable".
+    """
+    return value if value not in null_values else default
 
 
 def apply_map(fun):

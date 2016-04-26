@@ -2,8 +2,9 @@
 
 import pytest
 
-from processr.transformers import (set_value, get_value, copy_value,
-                                   copy_value_strict, passthrough_on_exception)
+from processr.transformers import (apply_default, set_value, get_value,
+                                   copy_value, copy_value_strict,
+                                   passthrough_on_exception)
 
 
 class DummyException(Exception):
@@ -12,6 +13,30 @@ class DummyException(Exception):
 
 def raise_dummy(*args, **kwargs):
     raise DummyException
+
+
+def test_apply_default_passthrough():
+    input = 42
+    expected_output = 42
+
+    output = apply_default(input, default=43)
+    assert output == expected_output
+
+
+def test_apply_default_custom_null():
+    input=[]
+    expected_output = 42
+
+    output = apply_default(input, default=42, null_values=([], '', None))
+    assert output == expected_output
+
+
+def test_apply_default():
+    input = None
+    expected_output = 42
+
+    output = apply_default(input, default=42)
+    assert output == expected_output
 
 
 def test_set_value():
