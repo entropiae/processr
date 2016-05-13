@@ -131,7 +131,7 @@ class StageDefinitions(dict):
 
         if add_default_stages:
             for stage_name, stage_handler in self._default_stages.items():
-                self[stage_name] = [stage_handler]
+                self[stage_name] = stage_handler
 
 
 ##############################################################
