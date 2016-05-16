@@ -24,7 +24,7 @@ The following snippet will increment the value for the key `the_answer` and then
     ...   ('transform_values', {'the_answer': lambda value: value + 1}),
     ...   ('rename_keys', {'the_answer': 'not_the_answer'})
     ... ]
-    ... process(input_dict, pipeline)
+    >>> process(input_dict, pipeline)
     {'the_answer': 43}
 
 
