@@ -4,7 +4,8 @@ import pytest
 
 from processr.transformers import (apply_default, set_value, get_value,
                                    copy_value, copy_value_strict,
-                                   passthrough_on_exception, apply_map, apply_filter)
+                                   passthrough_on_exception, apply_map,
+                                   apply_filter)
 
 
 class DummyException(Exception):
@@ -26,7 +27,7 @@ def test_apply_default_passthrough():
 
 
 def test_apply_default_custom_null():
-    provided_input=[]
+    provided_input = []
     expected_output = 42
 
     default = apply_default(default=42, null_values=([], '', None))
