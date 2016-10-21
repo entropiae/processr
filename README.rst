@@ -28,11 +28,6 @@ The following snippet will increment the value for the key ``the_answer`` and th
     {'not_the_answer': 43}
 
 
-processr's lingo
-================
-processr tr
-
-
 Stages
 ======
 In processr lingo, every kind of transformation applied to the dictionary is called a stage.
