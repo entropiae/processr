@@ -12,7 +12,7 @@ processr provides a way to apply processing pipelines (expressed as list/dict/tu
 
 Example
 =======
-The following snippet will increment the value for the key `the_answer` and then change its key to `not_the_answer`.
+The following snippet will increment the value for the key ``the_answer`` and then change its key to ``not_the_answer``.
 
 .. code-block:: python
 
@@ -25,11 +25,24 @@ The following snippet will increment the value for the key `the_answer` and then
     ...   ('rename_keys', {'the_answer': 'not_the_answer'})
     ... ]
     >>> process(input_dict, pipeline)
-    {'the_answer': 43}
+    {'not_the_answer': 43}
 
 
-Stages description
-========================
-TODO
+processr's lingo
+================
+processr tr
+
+
+Stages
+======
+In processr lingo, every kind of transformation applied to the dictionary is called a stage.
+In the previous example, two different stages are involved: transform_values and rename_keys.
+
+A set of stages is included with processr:
+``rename_keys``:
+``project_dict``
+``transform_values`` + ``transform_values_strict``
+``transform_dict``
+
 
 WIP. If you're interested, reach me on `twitter <https://twitter.com/entropiae>`_.
